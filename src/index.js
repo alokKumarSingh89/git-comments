@@ -1,20 +1,9 @@
 const chalk = require('chalk')
-const axios = require('axios')
 const minimist = require('minimist')
+
 const config = require('./config')
 const { pullComment, merge } = require('./comments')
-
-const apiBase = 'https://api.github.com'
-
-const http = axios.create({
-  baseURL: apiBase,
-  headers: {
-    Authorization: `token ${config.GITHUB_PERSONAL_ACCESS_TOKEN}`,
-  },
-})
-function log(message) {
-  process.stdout.write(message)
-}
+const { log, print } = require('./utils')
 
 async function start() {
   const args = minimist(process.argv.slice(2))
@@ -35,9 +24,9 @@ async function start() {
   let PULL_URL = config.PULL_URL.replace(/REPOSITORY/, repo)
   let ISSUE_URL = config.ISSUE_URL.replace(/REPOSITORY/, repo)
   Promise.all([
-    pullComment(COMMIT_URL, http, period, log, 'commit comment'),
-    // pullComment(PULL_URL, http, period, log, 'pull comment'),
-    // pullComment(ISSUE_URL, http, period, log, 'issue comment'),
+    pullComment(COMMIT_URL, period),
+    pullComment(PULL_URL, period),
+    pullComment(ISSUE_URL, period),
   ]).then((res) => {
     let data = {}
     data = merge(res[0], data)
@@ -47,7 +36,7 @@ async function start() {
     if (res[2]) {
       data = merge(res[2], data)
     }
-    console.log(data)
+    print(data)
   })
 }
 

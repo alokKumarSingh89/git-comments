@@ -1,14 +1,15 @@
 const moment = require('moment')
-async function pullComment(repo, http, period, callback, page = 0) {
+const { http } = require('./axiosHttp')
+const { log } = require('./utils')
+async function pullComment(repo, period, page = 0) {
   const data = {}
   try {
-    callback('*')
-    const url = `${repo}?page=${page}`
+    log('*', ' ', 5)
+    const url = repo.replace('PAGE', page)
     const res = await http.get(url)
     if (res.data.length <= 0) {
       return data
     }
-    console.log(res.data)
     res.data.forEach((item) => {
       if (
         period > -1 &&
@@ -16,10 +17,6 @@ async function pullComment(repo, http, period, callback, page = 0) {
       ) {
         return
       }
-      console.log(
-        moment().subtract(period, 'days').isBefore(moment(item.created_at)),
-        item,
-      )
       if (data[item.user.login]) {
         data[item.user.login] = {
           comment: item.body
@@ -36,7 +33,7 @@ async function pullComment(repo, http, period, callback, page = 0) {
         }
       }
     })
-    let newData = await pullComment(repo, http, period, callback, page + 1)
+    let newData = await pullComment(repo, period, page + 1)
     return merge(newData, data)
   } catch (e) {
     return data
